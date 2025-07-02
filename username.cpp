@@ -4,13 +4,11 @@
 #include <curl/curl.h>
 #include <windows.h>
 
-// Запись данных в строку
 size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
 
-// Поиск тега <title> в HTML
 std::string extractTitle(std::string buffer) {
     size_t start = buffer.find("subdomain");
     size_t end = buffer.find("domain");
@@ -20,27 +18,16 @@ std::string extractTitle(std::string buffer) {
     return "Страница не найдена";
 }
 
-void teststr(char stroka[6])
+void teststr(int size, char stroka[])
 {
-    if (stroka[4] == '{')
+    while (size > 0)
     {
-        stroka[3]++;
-        stroka[4] = 'a';
-    }
-    if (stroka[3] == '{')
-    {
-        stroka[2]++;
-        stroka[3] = 'a';
-    }
-    if (stroka[2] == '{')
-    {
-        stroka[1]++;
-        stroka[2] = 'a';
-    }
-    if (stroka[1] == '{')
-    {
-        stroka[0]++;
-        stroka[1] = 'a';
+        if (stroka[size] == '{')
+        {
+            stroka[size - 1]++;
+            stroka[size] = 'a';
+        }
+        size--;
     }
 }
 
@@ -51,24 +38,22 @@ int main() {
     std::string readBuffer;
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
-    char str[6] = "caaaa";
+    int size_username;
+    std::cout << "Enter size: ";
+    std::cin >> size_username;
+    char *str = new char[size_username + 1];
+    std::cout << "Enter username: ";
+    std::cin >> str;
     int count = 0;
     std::ofstream titlelist;
-    std::ofstream lastnum;
-    titlelist.open("words2.txt", std::ios::app);
+    titlelist.open("words.txt", std::ios::app);
     if (!titlelist.is_open())
     {
-        std::cerr << "Не удалось открыть файл" << std::endl;
-        return 1;
-    }
-    lastnum.open("last.txt");
-    if (!lastnum.is_open())
-    {
-        std::cerr << "Не удалось открыть файл" << std::endl;
+        std::cerr << "Not open file" << std::endl;
         return 1;
     }
     if (curl) {
-        while (str[1] != 'n')
+        while (str[0] != '{')
         {
             std::string url = "https://fragment.com/username/";
             url = url += str;
@@ -87,24 +72,24 @@ int main() {
             }
             else {
                 std::cout << url << std::endl;
-                std::cerr << "Ошибка curl: " << curl_easy_strerror(res) << std::endl;
+                std::cerr << "Error curl: " << curl_easy_strerror(res) << std::endl;
             }
             if (count == 300)
             {
                 count = 0;
+                std::cout << "Waiting...";
                 Sleep(20000);
             }
             readBuffer.clear();
             system("cls");
             count++;
-            str[4]++;
-            teststr(str);
+            str[size_username - 1]++;
+            teststr(size_username - 1, str);
         }
         curl_easy_cleanup(curl);
-        lastnum << str;
+        delete[] str;
     }
     curl_global_cleanup();
-    lastnum.close();
     titlelist.close();
 
     return 0;
